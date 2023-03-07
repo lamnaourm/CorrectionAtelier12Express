@@ -5,13 +5,15 @@ const ProductModel = require("../models/Product");
 const routes = express.Router();
 
 let connection, channel;
-const queueName = "order-service-queue";
+const queueName1 = "order-service-queue";
+const queueName2 = "product-service-queue";
 
 async function connectToRabbitMQ() {
   const amqpServer = "amqp://guest:guest@localhost:5672";
   connection = await amqp.connect(amqpServer);
   channel = await connection.createChannel();
-  await channel.assertQueue(queueName);
+  await channel.assertQueue(queueName1);
+  await channel.assertQueue(queueName2);
 }
 connectToRabbitMQ();
 
@@ -32,7 +34,11 @@ routes.post("/buy", (req, res) => {
   const ids = req.body; 
 
   ProductModel.find({_id: {$in :ids}}).then((prds) => {
-    channel.sendToQueue(queueName, Buffer.from(JSON.stringify(prds)));
+    channel.sendToQueue(queueName1, Buffer.from(JSON.stringify(prds)));
+
+    channel.consume(queueName2, (data) => {
+      res.json({message:'order cree', order: JSON.parse(data.content.toString())})
+    })
   })
 
 

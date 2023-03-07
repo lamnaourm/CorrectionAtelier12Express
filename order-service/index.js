@@ -8,7 +8,8 @@ const app = express();
 app.use(express.json());
 
 let connection, channel;
-const queueName = "order-service-queue";
+const queueName1 = "order-service-queue";
+const queueName2 = "product-service-queue";
 
 mongoose
   .connect(`mongodb://localhost:27017/dborders`, { useNewUrlParser: true })
@@ -19,18 +20,19 @@ async function connectToRabbitMQ() {
   const amqpServer = "amqp://guest:guest@localhost:5672";
   connection = await amqp.connect(amqpServer);
   channel = await connection.createChannel();
-  await channel.assertQueue(queueName);
+  await channel.assertQueue(queueName1);
+  await channel.assertQueue(queueName2);
 }
 connectToRabbitMQ().then(() => {
-    channel.consume(queueName, (data) => {
+    channel.consume(queueName1, (data) => {
         const products = JSON.parse(data.content.toString());
         let total = 0;
         products.forEach(element => {
             total += element.price;
         });
         const order = new orderModel({products:products, total:total})
-        order.save().then(()=> {
-            console.log('Order cree');
+        order.save().then((ord)=> {
+            channel.sendToQueue(queueName2, Buffer.from(JSON.stringify(ord)))
         })
 
         channel.ack(data);
