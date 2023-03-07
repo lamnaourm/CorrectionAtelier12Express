@@ -1,0 +1,34 @@
+version: 'version'
+services:
+  db:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - vateliermongo:/data/db
+    restart: unless-stopped
+  rabbit:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    restart: unless-stopped
+  srv1:
+    build: ./product-service/
+    ports:
+      - 3000:3000
+    depends_on:
+      - db
+      - rabbit
+    restart: unless-stopped
+  srv2:
+      build: ./order-service/
+      ports:
+        - 3001:3000
+      depends_on:
+        - db
+        - rabbit
+      restart: unless-stopped
+
+volumes:
+  vateliermongo:

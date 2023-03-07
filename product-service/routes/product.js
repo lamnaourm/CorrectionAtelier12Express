@@ -9,7 +9,7 @@ const queueName1 = "order-service-queue";
 const queueName2 = "product-service-queue";
 
 async function connectToRabbitMQ() {
-  const amqpServer = "amqp://guest:guest@localhost:5672";
+  const amqpServer = "amqp://guest:guest@rabbit:5672";
   connection = await amqp.connect(amqpServer);
   channel = await connection.createChannel();
   await channel.assertQueue(queueName1);
