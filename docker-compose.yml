@@ -1,4 +1,4 @@
-version: 'version'
+version: '3'
 services:
   db:
     image: mongo
@@ -27,6 +27,13 @@ services:
         - 3001:3000
       depends_on:
         - db
+        - rabbit
+      restart: unless-stopped
+  srv3:
+      build: ./email-service/
+      ports:
+        - 3002:3000
+      depends_on:
         - rabbit
       restart: unless-stopped
 
